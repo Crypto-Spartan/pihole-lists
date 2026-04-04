@@ -27,7 +27,7 @@ jobs:
           echo 'trackers_all.txt changed; will update torrent_trackers_domains.txt'
           echo "$trackers_all_sha256sum" > trackers_all_sha256sum.txt
           # sed "/^$/d" ${{ runner.temp }}/trackers_all.txt | cut -d":" -f2 | cut -d"/" -f3
-          awk -F':' 'NF {split($2, a, "/"); print a[3]}' > trackers_domains.txt
+          awk -F':' 'NF {split($2, a, "/"); print a[3]}' ${{ runner.temp }}/trackers_all.txt > torrent_trackers_domains.txt
 
       - name: Commit changes
         uses: EndBug/add-and-commit@v10
