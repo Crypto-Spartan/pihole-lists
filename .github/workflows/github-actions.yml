@@ -1,7 +1,7 @@
 name: Build Lists
 on:
   schedule:
-    - cron: "0 0 * * 2,6"
+    - cron: "33 22 * * 2,6"
 jobs:
   build-torrent-trackers-domains:
     runs-on: ubuntu-slim
