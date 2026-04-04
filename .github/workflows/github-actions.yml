@@ -1,8 +1,8 @@
 name: Build Lists
 on:
+  workflow_dispatch:
   schedule:
     - cron: "59 23 * * 2,6"
-  workflow_dispatch
 jobs:
   build-torrent-trackers-domains:
     runs-on: ubuntu-slim
