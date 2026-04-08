@@ -1,0 +1,39 @@
+name: Build DShield Block IPs List
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0,30 * * * *"
+jobs:
+  build-dshield-block-ips-list:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Get block.txt & Update dshield_block_ips.txt
+        run: |
+          url=https://feeds.dshield.org/block.txt
+          dshield_block_sha256sum=$(curl -fsSL "$url" | awk 'substr($0, 1, 1) != "#" && $1 ~ /\.0$/ && $2 ~ /\.255$/ {print $1""FS""$2}' | sort -V | tee ${{ runner.temp }}/dshield_block.txt | sha256sum | awk '{print $1}')
+          echo "dshield_block_sha256sum=$dshield_block_sha256sum"
+          if [[ "$dshield_block_sha256sum" == $(cat dshield_block_sha256sum.txt) ]]; then
+            echo 'should_commit=false' | tee -a "$GITHUB_ENV"
+            echo 'block.txt not changed; nothing to do'
+            exit 0
+          fi
+          echo 'should_commit=true' | tee -a "$GITHUB_ENV"
+          echo 'block.txt changed; will update dshield_block_ips.txt'
+          echo "$dshield_block_sha256sum" > dshield_block_sha256sum.txt
+          awk '{print $1; ip3o = $1; sub(/\.0$/, "", ip3o); for(i = 1; i < 255; i++){printf "%s%s%d\n", ip3o, ".", i}; print $2}' ${{ runner.temp }}/dshield_block.txt > dshield_block_ips.txt
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v10
+        if: ${{ env.should_commit == 'true' }}
+        with:
+          default_author: github_actions
+          add: |
+            - dshield_block_sha256sum.txt
+            - dshield_block_ips.txt
+
