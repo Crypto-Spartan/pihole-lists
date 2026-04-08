@@ -18,16 +18,16 @@ jobs:
           url=https://feeds.dshield.org/block.txt
           dshield_block_sha256sum=$(curl -fsSL "$url" | awk 'substr($0, 1, 1) != "#" && $1 ~ /\.0$/ && $2 ~ /\.255$/ {print $1""FS""$2}' | sort -V | tee ${{ runner.temp }}/dshield_block.txt | sha256sum | awk '{print $1}')
           echo "dshield_block_sha256sum=$dshield_block_sha256sum"
-          if [[ "$dshield_block_sha256sum" == $(cat dshield_block_sha256sum.txt) ]]; then
+          if [[ "$dshield_block_sha256sum" == $(cat hashes/ips/dshield_block_sha256sum.txt) ]]; then
             echo 'should_commit=false' | tee -a "$GITHUB_ENV"
             echo 'block.txt not changed; nothing to do'
             exit 0
           fi
           echo 'should_commit=true' | tee -a "$GITHUB_ENV"
-          echo 'block.txt changed; will update dshield_block_ips.txt'
-          echo "$dshield_block_sha256sum" > dshield_block_sha256sum.txt
-          echo "# data source: $url" > dshield_block_ips.txt
-          awk '{print $1; ip3o = $1; sub(/\.0$/, "", ip3o); for(i = 1; i < 255; i++){printf "%s%s%d\n", ip3o, ".", i}; print $2}' ${{ runner.temp }}/dshield_block.txt >> dshield_block_ips.txt
+          echo 'block.txt changed; will update ips/dshield_block_ips.txt'
+          echo "$dshield_block_sha256sum" > hashes/ips/dshield_block_sha256sum.txt
+          echo "# data source: $url" > ips/dshield_block_ips.txt
+          awk '{print $1; ip3o = $1; sub(/\.0$/, "", ip3o); for(i = 1; i < 255; i++){printf "%s%s%d\n", ip3o, ".", i}; print $2}' ${{ runner.temp }}/dshield_block.txt >> ips/dshield_block_ips.txt
 
       - name: Commit changes
         uses: EndBug/add-and-commit@v10
@@ -35,6 +35,6 @@ jobs:
         with:
           default_author: github_actions
           add: |
-            - dshield_block_sha256sum.txt
-            - dshield_block_ips.txt
+            - hashes/ips/dshield_block_sha256sum.txt
+            - ips/dshield_block_ips.txt
 

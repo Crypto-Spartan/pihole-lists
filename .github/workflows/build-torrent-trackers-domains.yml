@@ -18,16 +18,16 @@ jobs:
           url=https://raw.githubusercontent.com/ngosang/trackerslist/refs/heads/master/trackers_all.txt
           trackers_all_sha256sum=$(curl -fsSL "$url" | tee ${{ runner.temp }}/trackers_all.txt | sha256sum | awk '{print $1}')
           echo "trackers_all_sha256sum=$trackers_all_sha256sum"
-          if [[ "$trackers_all_sha256sum" == $(cat trackers_all_sha256sum.txt) ]]; then
+          if [[ "$trackers_all_sha256sum" == $(cat hashes/domains/trackers_all_sha256sum.txt) ]]; then
             echo 'should_commit=false' | tee -a "$GITHUB_ENV"
             echo 'trackers_all.txt not changed; nothing to do'
             exit 0
           fi
           echo 'should_commit=true' | tee -a "$GITHUB_ENV"
-          echo 'trackers_all.txt changed; will update torrent_trackers_domains.txt'
-          echo "$trackers_all_sha256sum" > trackers_all_sha256sum.txt
-          echo "# data source: $url" > torrent_trackers_domains.txt
-          awk -F':' 'NF {split($2, a, "/"); print a[3]}' ${{ runner.temp }}/trackers_all.txt >> torrent_trackers_domains.txt
+          echo 'trackers_all.txt changed; will update domains/torrent_trackers_domains.txt'
+          echo "$trackers_all_sha256sum" > hashes/domains/trackers_all_sha256sum.txt
+          echo "# data source: $url" > domains/torrent_trackers_domains.txt
+          awk -F':' 'NF {split($2, a, "/"); print a[3]}' ${{ runner.temp }}/trackers_all.txt >> domains/torrent_trackers_domains.txt
 
       - name: Commit changes
         uses: EndBug/add-and-commit@v10
@@ -35,6 +35,6 @@ jobs:
         with:
           default_author: github_actions
           add: |
-            - trackers_all_sha256sum.txt
-            - torrent_trackers_domains.txt
+            - hashes/domains/trackers_all_sha256sum.txt
+            - domains/torrent_trackers_domains.txt
 
